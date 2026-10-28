@@ -1,5 +1,4 @@
-
-import java.util.Scanner;
+package punnet;
 
 public class PunnetSquare {
 
@@ -11,6 +10,32 @@ public class PunnetSquare {
     alleles[i][j] = one character from string
     alleles.length = number of parents / rows
     */
+
+    public static String sortOffspring(String genotype) {
+        char[] alleles = genotype.toCharArray();
+
+        // Sort all alleles alphabetically, uppercase before lowercase
+        for (int i = 0; i < alleles.length - 1; i++) {
+            for (int j = i + 1; j < alleles.length; j++) {
+
+                char first = Character.toLowerCase(alleles[i]);
+                char second = Character.toLowerCase(alleles[j]);
+
+                if (first > second ||
+                        (first == second
+                                && Character.isLowerCase(alleles[i])
+                                && Character.isUpperCase(alleles[j]))) {
+
+                    char temp = alleles[i];
+                    alleles[i] = alleles[j];
+                    alleles[j] = temp;
+                }
+            }
+        }
+
+        return new String(alleles);
+    }
+
     public static String[] calculatePunnet(String[][] gamete_array) {
         int total = gamete_array[0].length * gamete_array[1].length;
         String[] phenotypes = new String[total];
@@ -20,7 +45,9 @@ public class PunnetSquare {
         for (int i = 0; i < gamete_array[0].length; i++) {
             for (int j = 0; j < gamete_array[1].length; j++) {
 
-                phenotypes[index] = gamete_array[0][i] + gamete_array[1][j];
+                phenotypes[index] = sortOffspring(
+                        gamete_array[0][i] + gamete_array[1][j]
+                );
                 index++;
             }
         }
@@ -99,57 +126,75 @@ public class PunnetSquare {
         return gamete_array;
     }
 
-    public static void main(String[] args) {
-        Scanner scnr = new Scanner(System.in);
 
-        String father_allele = scnr.next();
-        String mother_allele = scnr.next();
+    // Sort each allele pair so uppercase comes first
+    public static String sortGenotype(String genotype) {
+        String sorted = "";
 
-        // Allow each parent to have a different input length
-        char[][] alleles = new char[2][];
+        for (int i = 0; i < genotype.length() - 1; i += 2) {
+            char first = genotype.charAt(i);
+            char second = genotype.charAt(i + 1);
 
-        alleles[0] = father_allele.toCharArray();
-        alleles[1] = mother_allele.toCharArray();
-
-        if (isValidInput(alleles)) {
-            String[][] genotype_array = getGenotypes(alleles);
-            String[][] gamete_array = getGametes(genotype_array);
-            String[] phenotypes = calculatePunnet(gamete_array);
-// Print genotypes
-            System.out.println("Genotypes:");
-            for (int i = 0; i < genotype_array.length; i++) {
-                System.out.println("Parent " + (i + 1) + ": "
-                        + genotype_array[i].length + " genotypes");
-
-                for (int j = 0; j < genotype_array[i].length; j++) {
-                    System.out.print(genotype_array[i][j] + " ");
-                }
-                System.out.println();
+            if (Character.isUpperCase(first)
+                    && Character.isLowerCase(second)) {
+                sorted += "" + first + second;
+            } else if (Character.isLowerCase(first)
+                    && Character.isUpperCase(second)) {
+                sorted += "" + second + first;
+            } else {
+                sorted += "" + first + second;
             }
-
-// Print gametes
-            System.out.println("Gametes:");
-            for (int i = 0; i < gamete_array.length; i++) {
-                System.out.println("Parent " + (i + 1) + ": "
-                        + gamete_array[i].length + " gametes");
-
-                for (int j = 0; j < gamete_array[i].length; j++) {
-                    System.out.print(gamete_array[i][j] + " ");
-                }
-                System.out.println();
-            }
-
-// Print offspring combinations
-            System.out.println("Offspring combinations: " + phenotypes.length);
-            for (int i = 0; i < phenotypes.length; i++) {
-                System.out.print(phenotypes[i] + " ");
-            }
-            System.out.println();
-
-        } else {
-            System.out.println("Invalid genotype input.");
         }
 
-        scnr.close();
+        return sorted;
     }
-}
+
+    // Check whether two genotypes have the same trait pairs,
+    // regardless of the order of those pairs
+    public static boolean matchesTrait(String genotype, String trait) {
+        genotype = sortGenotype(genotype);
+        trait = sortGenotype(trait);
+
+        for (int i = 0; i < trait.length(); i += 2) {
+            String targetPair = trait.substring(i, i + 2);
+
+            boolean found = false;
+
+            for (int j = 0; j < genotype.length() - 1; j += 2) {
+                if (genotype.substring(j, j + 2).equals(targetPair)) {
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // Calculate the probability of a matching genotype
+    public static double probability(String[] phenotypes, String trait) {
+        if (phenotypes.length == 0) {
+            return 0.0;
+        }
+
+        int counter = 0;
+
+        for (int i = 0; i < phenotypes.length; i++) {
+            phenotypes[i] = sortGenotype(phenotypes[i]);
+
+            if (matchesTrait(phenotypes[i], trait)) {
+                counter++;
+            }
+        }
+
+        return (double) counter / phenotypes.length;
+    }
+
+
+
+
+    }
