@@ -44,7 +44,3 @@ Examples: `Aa`, `AABB`, `AaBb`.
 
 - Java Development Kit (JDK)
 - A Java IDE or build environment that supports external JAR files
-
-## License
-
-Specify a license before distributing this project publicly.
